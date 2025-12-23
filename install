@@ -1,1 +1,19 @@
-eval "$(curl -fsSL https://raw.githubusercontent.com/haitech/bootstrap-arch/refs/heads/master/boot.sh)"
+KEY_PATH="$HOME/.ssh/haiarch-id_ed25519"
+PUB_PATH="$HOME/.ssh/haiarch-id_ed25519.pub"
+
+if [ ! -f "$KEY_PATH" ] || [ ! -f "$PUB_PATH" ]; then
+    echo "Error: Keys not found in $HOME/.ssh/" >&2
+    return 1
+else
+    # Ensure the private key is secure (SSH requires this)
+    chmod 600 "$KEY_PATH"
+
+    # Clean up any existing directory to prevent git clone errors
+    rm -rf temp_loader
+
+    # Run the clone using the key located in .ssh
+    GIT_SSH_COMMAND="ssh -i $KEY_PATH -o IdentitiesOnly=yes" \
+    git clone --depth 1 git@github.com:haitech/haiarch.git temp_loader -q \
+    && cat temp_loader/boot.sh | bash \
+    && rm -rf temp_loader
+fi
